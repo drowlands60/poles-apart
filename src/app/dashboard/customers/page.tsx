@@ -22,6 +22,20 @@ export default async function CustomersPage() {
     .select("*, rounds(name)")
     .order("last_name", { ascending: true }) as { data: (Customer & { rounds: { name: string } | null })[] | null };
 
+  // Get outstanding balances per customer
+  const { data: unpaidItems } = await supabase
+    .from("run_customers")
+    .select("customer_id, price")
+    .eq("status", "completed")
+    .eq("paid", false);
+
+  const balanceMap: Record<string, number> = {};
+  if (unpaidItems) {
+    for (const item of unpaidItems) {
+      balanceMap[item.customer_id] = (balanceMap[item.customer_id] ?? 0) + Number(item.price);
+    }
+  }
+
   // Get unique round names for filter
   const roundNames = [...new Set((customers ?? []).map((c) => c.rounds?.name).filter(Boolean))] as string[];
 
@@ -49,7 +63,7 @@ export default async function CustomersPage() {
           </Link>
         </div>
       ) : (
-        <CustomerTable customers={customers} roundNames={roundNames} />
+        <CustomerTable customers={customers} roundNames={roundNames} balanceMap={balanceMap} />
       )}
     </div>
   );

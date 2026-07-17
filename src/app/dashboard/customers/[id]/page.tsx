@@ -42,6 +42,23 @@ export default async function EditCustomerPage({ params }: EditCustomerPageProps
     .not("notes", "is", null)
     .order("position", { ascending: false });
 
+  // Balance: total completed work vs payments
+  const { data: completedWork } = await supabase
+    .from("run_customers")
+    .select("price")
+    .eq("customer_id", id)
+    .eq("status", "completed");
+
+  const { data: payments } = await supabase
+    .from("payments")
+    .select("amount, payment_date, method")
+    .eq("customer_id", id)
+    .order("payment_date", { ascending: false });
+
+  const totalOwed = completedWork?.reduce((sum, w) => sum + Number(w.price), 0) ?? 0;
+  const totalPaid = payments?.reduce((sum, p) => sum + Number(p.amount), 0) ?? 0;
+  const balance = totalOwed - totalPaid;
+
   async function action(_prevState: { error?: string } | undefined, formData: FormData) {
     "use server";
     const result = await updateCustomer(id, formData);
@@ -56,6 +73,25 @@ export default async function EditCustomerPage({ params }: EditCustomerPageProps
         </h2>
         <DeleteCustomerButton id={customer.id} name={`${customer.first_name} ${customer.last_name}`} />
       </div>
+
+      {/* Balance */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <p className="text-xs text-gray-500 uppercase font-medium">Work Done</p>
+          <p className="text-lg font-bold text-gray-900">£{totalOwed.toFixed(2)}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <p className="text-xs text-gray-500 uppercase font-medium">Paid</p>
+          <p className="text-lg font-bold text-green-700">£{totalPaid.toFixed(2)}</p>
+        </div>
+        <div className={`p-4 rounded-lg border ${balance > 0 ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"}`}>
+          <p className="text-xs text-gray-500 uppercase font-medium">Balance</p>
+          <p className={`text-lg font-bold ${balance > 0 ? "text-red-700" : "text-green-700"}`}>
+            {balance > 0 ? `£${balance.toFixed(2)} owed` : balance < 0 ? `£${Math.abs(balance).toFixed(2)} credit` : "Settled"}
+          </p>
+        </div>
+      </div>
+
       <CustomerForm
         customer={customer}
         rounds={rounds ?? []}

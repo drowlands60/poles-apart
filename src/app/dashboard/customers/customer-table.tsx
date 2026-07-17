@@ -17,15 +17,16 @@ interface CustomerWithRound {
   rounds: { name: string } | null;
 }
 
-type SortField = "name" | "address" | "round" | "price" | "status";
+type SortField = "name" | "address" | "round" | "price" | "status" | "balance";
 type SortDir = "asc" | "desc";
 
 interface CustomerTableProps {
   customers: CustomerWithRound[];
   roundNames: string[];
+  balanceMap: Record<string, number>;
 }
 
-export function CustomerTable({ customers, roundNames }: CustomerTableProps) {
+export function CustomerTable({ customers, roundNames, balanceMap }: CustomerTableProps) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [sortField, setSortField] = useState<SortField>("name");
@@ -88,6 +89,9 @@ export function CustomerTable({ customers, roundNames }: CustomerTableProps) {
           break;
         case "status":
           cmp = (a.is_active ? 0 : 1) - (b.is_active ? 0 : 1);
+          break;
+        case "balance":
+          cmp = (balanceMap[a.id] ?? 0) - (balanceMap[b.id] ?? 0);
           break;
       }
       return sortDir === "asc" ? cmp : -cmp;
@@ -164,6 +168,7 @@ export function CustomerTable({ customers, roundNames }: CustomerTableProps) {
                 <SortHeader field="address">Address</SortHeader>
                 <SortHeader field="round">Round</SortHeader>
                 <SortHeader field="price">Price</SortHeader>
+                <SortHeader field="balance">Owed</SortHeader>
                 <SortHeader field="status">Status</SortHeader>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -197,6 +202,13 @@ export function CustomerTable({ customers, roundNames }: CustomerTableProps) {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     £{Number(customer.price).toFixed(2)}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {(balanceMap[customer.id] ?? 0) > 0 ? (
+                      <span className="text-red-700 font-medium">£{balanceMap[customer.id].toFixed(2)}</span>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -215,7 +227,7 @@ export function CustomerTable({ customers, roundNames }: CustomerTableProps) {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-500">
+                  <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-500">
                     No customers match your search.
                   </td>
                 </tr>
