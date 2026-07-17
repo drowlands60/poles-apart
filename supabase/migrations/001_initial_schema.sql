@@ -261,3 +261,11 @@ create trigger update_customers_updated_at before update on public.customers
   for each row execute function public.update_updated_at();
 create trigger update_jobs_updated_at before update on public.jobs
   for each row execute function public.update_updated_at();
+
+-- ============================================
+-- TABLE GRANTS (required for RLS policies to work)
+-- ============================================
+grant usage on schema public to authenticated;
+grant usage on schema public to anon;
+grant select, insert, update, delete on all tables in schema public to authenticated;
+grant select on all tables in schema public to anon;
