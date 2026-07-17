@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { updateRun, deleteRun } from "../actions";
 import { AlertTriangle, Trash2 } from "lucide-react";
 import { RunDetailClient } from "./run-detail-client";
+import { SmsButtons } from "./sms-buttons";
 
 const TARGET_TURNOVER_TWO = 340;
 const TARGET_TURNOVER_ONE = 200;
@@ -137,6 +138,9 @@ export default async function RunDetailPage({ params }: RunDetailPageProps) {
           </p>
         </div>
       </div>
+
+      {/* SMS Notifications */}
+      <SmsButtons runId={id} runStatus={run.status} />
 
       {/* Client-side interactive section */}
       <RunDetailClient
