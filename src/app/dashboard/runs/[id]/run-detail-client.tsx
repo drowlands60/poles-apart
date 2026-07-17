@@ -138,25 +138,25 @@ export function RunDetailClient({
       {/* Customers in Run */}
       <div className="bg-white rounded-lg border border-gray-200 p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">
+          <h3 className="text-xs sm:text-sm font-semibold text-gray-900 uppercase tracking-wider shrink-0">
             Customers ({runCustomers.length})
           </h3>
           {run.status !== "completed" && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               {allRounds.length > 0 && (
                 <button
                   onClick={() => { setShowAddRound(!showAddRound); setShowAddCustomer(false); }}
-                  className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+                  className="inline-flex items-center gap-1 text-xs sm:text-sm font-medium text-blue-600 hover:text-blue-700 whitespace-nowrap"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                   Add Round
                 </button>
               )}
               <button
                 onClick={() => { setShowAddCustomer(!showAddCustomer); setShowAddRound(false); }}
-                className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+                className="inline-flex items-center gap-1 text-xs sm:text-sm font-medium text-blue-600 hover:text-blue-700 whitespace-nowrap"
               >
-                <UserPlus className="w-4 h-4" />
+                <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                 Add Customer
               </button>
             </div>
