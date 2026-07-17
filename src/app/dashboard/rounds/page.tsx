@@ -3,8 +3,6 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
-const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
 export default async function RoundsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -21,6 +19,23 @@ export default async function RoundsPage() {
     .from("rounds")
     .select("*, customers(count)")
     .order("name");
+
+  // Get last run date for each round
+  const { data: lastRuns } = await supabase
+    .from("runs")
+    .select("round_id, scheduled_date")
+    .not("round_id", "is", null)
+    .order("scheduled_date", { ascending: false });
+
+  // Build a map of round_id -> last scheduled_date
+  const lastRunMap: Record<string, string> = {};
+  if (lastRuns) {
+    for (const run of lastRuns) {
+      if (run.round_id && !lastRunMap[run.round_id]) {
+        lastRunMap[run.round_id] = run.scheduled_date;
+      }
+    }
+  }
 
   return (
     <div>
@@ -68,13 +83,18 @@ export default async function RoundsPage() {
                 </Link>
               </div>
               <div className="mt-3 flex items-center gap-4 text-sm text-gray-500">
-                {round.day_of_week !== null && (
-                  <span>{DAYS[round.day_of_week]}</span>
-                )}
                 <span>Every {round.frequency_weeks} weeks</span>
                 <span>{round.customers?.[0]?.count ?? 0} customers</span>
               </div>
-              <div className="mt-4">
+              {lastRunMap[round.id] && (
+                <div className="mt-2 text-xs text-gray-500">
+                  Last run: {new Date(lastRunMap[round.id]).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                </div>
+              )}
+              {!lastRunMap[round.id] && (
+                <div className="mt-2 text-xs text-gray-400 italic">Never run</div>
+              )}
+              <div className="mt-3">
                 <Link
                   href={`/dashboard/runs/new?round_id=${round.id}`}
                   className="text-sm font-medium text-green-600 hover:text-green-700"

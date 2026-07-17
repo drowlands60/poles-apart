@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import type { Customer } from "@/lib/types";
+import { CustomerRow } from "./customer-row";
 
 export default async function CustomersPage() {
   const supabase = await createClient();
@@ -72,47 +73,7 @@ export default async function CustomersPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {customers.map((customer) => (
-                  <tr key={customer.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {customer.first_name} {customer.last_name}
-                      </div>
-                      {customer.phone && (
-                        <div className="text-sm text-gray-500">{customer.phone}</div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{customer.address_line1}</div>
-                      <div className="text-sm text-gray-500">
-                        {customer.city}, {customer.postcode}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {customer.rounds?.name ?? "—"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      £{Number(customer.price).toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          customer.is_active
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {customer.is_active ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      <Link
-                        href={`/dashboard/customers/${customer.id}`}
-                        className="text-blue-600 hover:text-blue-700 font-medium"
-                      >
-                        Edit
-                      </Link>
-                    </td>
-                  </tr>
+                  <CustomerRow key={customer.id} customer={customer} />
                 ))}
               </tbody>
             </table>

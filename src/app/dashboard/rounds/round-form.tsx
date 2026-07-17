@@ -3,17 +3,6 @@
 import { useActionState } from "react";
 import type { Round } from "@/lib/types";
 
-const DAYS = [
-  { value: "", label: "No specific day" },
-  { value: "1", label: "Monday" },
-  { value: "2", label: "Tuesday" },
-  { value: "3", label: "Wednesday" },
-  { value: "4", label: "Thursday" },
-  { value: "5", label: "Friday" },
-  { value: "6", label: "Saturday" },
-  { value: "0", label: "Sunday" },
-];
-
 interface RoundFormProps {
   round?: Round;
   action: (prevState: { error?: string } | undefined, formData: FormData) => Promise<{ error?: string } | undefined>;
@@ -61,24 +50,6 @@ export function RoundForm({ round, action, submitLabel }: RoundFormProps) {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="day_of_week" className="block text-sm font-medium text-gray-700 mb-1">
-            Day of Week
-          </label>
-          <select
-            id="day_of_week"
-            name="day_of_week"
-            defaultValue={round?.day_of_week?.toString() ?? ""}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            {DAYS.map((day) => (
-              <option key={day.value} value={day.value}>
-                {day.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
         <div>
           <label htmlFor="frequency_weeks" className="block text-sm font-medium text-gray-700 mb-1">
             Frequency (weeks)

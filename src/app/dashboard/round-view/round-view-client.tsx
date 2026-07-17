@@ -133,7 +133,7 @@ export function RoundViewClient({ run, customers }: RoundViewClientProps) {
       <div className="w-full bg-gray-200 rounded-full h-2">
         <div
           className="bg-green-500 h-2 rounded-full transition-all"
-          style={{ width: `${(completedCustomers.length / customers.length) * 100}%` }}
+          style={{ width: `${((customers.length - pendingCustomers.length) / customers.length) * 100}%` }}
         />
       </div>
 

@@ -34,6 +34,14 @@ export default async function EditCustomerPage({ params }: EditCustomerPageProps
     .select("*")
     .order("name");
 
+  // Get run notes history for this customer
+  const { data: runNotes } = await supabase
+    .from("run_customers")
+    .select("notes, status, completed_at, runs(name, scheduled_date)")
+    .eq("customer_id", id)
+    .not("notes", "is", null)
+    .order("position", { ascending: false });
+
   async function action(_prevState: { error?: string } | undefined, formData: FormData) {
     "use server";
     const result = await updateCustomer(id, formData);
@@ -54,6 +62,35 @@ export default async function EditCustomerPage({ params }: EditCustomerPageProps
         action={action}
         submitLabel="Save Changes"
       />
+
+      {/* Run notes history */}
+      {runNotes && runNotes.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Run Notes</h3>
+          <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
+            {runNotes.map((rn, i) => {
+              const run = rn.runs as unknown as { name: string; scheduled_date: string } | null;
+              return (
+                <div key={i} className="p-3 flex items-start gap-3">
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full mt-0.5 shrink-0 ${
+                    rn.status === "completed" ? "bg-green-100 text-green-700" :
+                    rn.status === "skipped" ? "bg-gray-100 text-gray-600" :
+                    "bg-blue-100 text-blue-700"
+                  }`}>
+                    {rn.status}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm text-gray-900">{rn.notes}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {run?.name} — {run?.scheduled_date ? new Date(run.scheduled_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : ""}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

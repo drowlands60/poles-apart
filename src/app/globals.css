@@ -12,6 +12,12 @@
   --font-mono: var(--font-geist-mono);
 }
 
+input,
+select,
+textarea {
+  color: #111827;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
