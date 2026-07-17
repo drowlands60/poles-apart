@@ -20,11 +20,14 @@ export default async function RoundsPage() {
     .select("*, customers(count)")
     .order("name");
 
-  // Get last run date for each round
+  // Get last completed run date for each round
+  const today = new Date().toISOString().split("T")[0];
   const { data: lastRuns } = await supabase
     .from("runs")
     .select("round_id, scheduled_date")
     .not("round_id", "is", null)
+    .eq("status", "completed")
+    .lte("scheduled_date", today)
     .order("scheduled_date", { ascending: false });
 
   // Build a map of round_id -> last scheduled_date

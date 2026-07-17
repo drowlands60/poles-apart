@@ -14,7 +14,7 @@ interface RunDetailClientProps {
     position: number;
     price: number;
     status: string;
-    customers: { id: string; first_name: string; last_name: string; address_line1: string; postcode: string; phone: string | null }[] | null;
+    customers: { id: string; first_name: string; last_name: string; address_line1: string; postcode: string; phone: string | null } | null;
   }[];
   allCleaners: { id: string; full_name: string }[];
   availableCustomers: { id: string; first_name: string; last_name: string; address_line1: string; postcode: string; price: number }[];
@@ -177,7 +177,7 @@ export function RunDetailClient({
         ) : (
           <div className="divide-y divide-gray-100">
             {runCustomers.map((rc, i) => {
-              const cust = rc.customers?.[0];
+              const cust = rc.customers;
               return (
               <div key={rc.customer_id} className="flex items-center justify-between py-2">
                 <div className="flex items-center gap-3">

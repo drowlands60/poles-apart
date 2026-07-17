@@ -36,7 +36,8 @@ export default async function NewRunPage({ searchParams }: NewRunPageProps) {
   if (round_id) {
     const round = rounds?.find((r) => r.id === round_id);
     if (round) {
-      defaultName = round.name;
+      const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+      defaultName = `${round.name} — ${today}`;
     }
   }
 

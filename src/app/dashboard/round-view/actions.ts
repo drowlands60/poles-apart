@@ -34,7 +34,17 @@ export async function markCustomerStatus(
     return { error: error.message };
   }
 
+  // Auto-set run to in_progress when first customer is done/skipped
+  if (status === "completed" || status === "skipped") {
+    await supabase
+      .from("runs")
+      .update({ status: "in_progress" })
+      .eq("id", runId)
+      .eq("status", "planned");
+  }
+
   revalidatePath("/dashboard/round-view");
+  revalidatePath("/dashboard/runs");
 }
 
 export async function addNoteToCustomer(
@@ -77,4 +87,23 @@ export async function reorderRunCustomers(
   }
 
   revalidatePath("/dashboard/round-view");
+}
+
+export async function completeRun(runId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase
+    .from("runs")
+    .update({ status: "completed" })
+    .eq("id", runId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/dashboard/round-view");
+  revalidatePath("/dashboard/runs");
+  revalidatePath("/dashboard/rounds");
 }

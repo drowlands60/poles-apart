@@ -143,7 +143,7 @@ export default async function RunDetailPage({ params }: RunDetailPageProps) {
         runId={id}
         run={run}
         runCleaners={runCleaners ?? []}
-        runCustomers={runCustomers ?? []}
+        runCustomers={(runCustomers as unknown as React.ComponentProps<typeof RunDetailClient>["runCustomers"]) ?? []}
         allCleaners={allCleaners ?? []}
         availableCustomers={filteredAvailable}
         updateAction={handleUpdate}

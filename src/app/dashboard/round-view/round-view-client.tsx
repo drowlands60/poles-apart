@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { CheckCircle, SkipForward, Phone, MessageSquare, Navigation, Undo2, GripVertical } from "lucide-react";
-import { markCustomerStatus, addNoteToCustomer, reorderRunCustomers } from "./actions";
+import { markCustomerStatus, addNoteToCustomer, reorderRunCustomers, completeRun } from "./actions";
 import {
   DndContext,
   closestCenter,
@@ -205,6 +205,16 @@ export function RoundViewClient({ run, customers }: RoundViewClientProps) {
           <p className="text-sm text-green-600">
             {completedCustomers.length} completed · £{customers.reduce((sum, c) => sum + (c.status === "completed" ? Number(c.price) : 0), 0).toFixed(2)} earned
           </p>
+          {run.status !== "completed" && (
+            <button
+              onClick={() => startTransition(() => { completeRun(run.id); })}
+              disabled={pending}
+              className="mt-4 inline-flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+            >
+              <CheckCircle className="w-4 h-4" />
+              Mark Run as Complete
+            </button>
+          )}
         </div>
       )}
 

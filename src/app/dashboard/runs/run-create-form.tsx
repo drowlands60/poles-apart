@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, useRef } from "react";
 import type { Round, Profile } from "@/lib/types";
 
 interface RunCreateFormProps {
@@ -11,10 +11,41 @@ interface RunCreateFormProps {
   action: (prevState: { error?: string } | undefined, formData: FormData) => Promise<{ error?: string } | undefined>;
 }
 
+function formatDate(dateStr: string) {
+  if (!dateStr) return "";
+  return new Date(dateStr + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function generateName(roundName: string, dateStr: string) {
+  if (!roundName) return "";
+  const datePart = dateStr ? ` — ${formatDate(dateStr)}` : "";
+  return `${roundName}${datePart}`;
+}
+
 export function RunCreateForm({ rounds, cleaners, defaultRoundId, defaultName, action }: RunCreateFormProps) {
   const [state, formAction, pending] = useActionState(action, undefined);
 
   const today = new Date().toISOString().split("T")[0];
+  const [roundId, setRoundId] = useState(defaultRoundId);
+  const [date, setDate] = useState(today);
+  const [name, setName] = useState(defaultName || generateName(rounds.find((r) => r.id === defaultRoundId)?.name ?? "", today));
+  const userEditedName = useRef(false);
+
+  function handleRoundChange(newRoundId: string) {
+    setRoundId(newRoundId);
+    if (!userEditedName.current) {
+      const roundName = rounds.find((r) => r.id === newRoundId)?.name ?? "";
+      setName(generateName(roundName, date));
+    }
+  }
+
+  function handleDateChange(newDate: string) {
+    setDate(newDate);
+    if (!userEditedName.current) {
+      const roundName = rounds.find((r) => r.id === roundId)?.name ?? "";
+      setName(generateName(roundName, newDate));
+    }
+  }
 
   return (
     <form action={formAction} className="space-y-6 bg-white p-6 rounded-lg border border-gray-200 max-w-xl">
@@ -31,7 +62,8 @@ export function RunCreateForm({ rounds, cleaners, defaultRoundId, defaultName, a
         <select
           id="round_id"
           name="round_id"
-          defaultValue={defaultRoundId}
+          value={roundId}
+          onChange={(e) => handleRoundChange(e.target.value)}
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="">No template (empty run)</option>
@@ -55,8 +87,9 @@ export function RunCreateForm({ rounds, cleaners, defaultRoundId, defaultName, a
           id="name"
           name="name"
           required
-          defaultValue={defaultName}
-          placeholder="e.g. Monday - Swindon North"
+          value={name}
+          onChange={(e) => { setName(e.target.value); userEditedName.current = true; }}
+          placeholder="e.g. Monday - Swindon North — 17 Jul 2026"
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
       </div>
@@ -70,7 +103,8 @@ export function RunCreateForm({ rounds, cleaners, defaultRoundId, defaultName, a
           id="scheduled_date"
           name="scheduled_date"
           required
-          defaultValue={today}
+          value={date}
+          onChange={(e) => handleDateChange(e.target.value)}
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
       </div>
