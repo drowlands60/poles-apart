@@ -28,7 +28,7 @@ export default async function NewCustomerPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Add Customer</h2>
+      <h2 className="text-2xl font-bold text-[#1e3a5f] mb-6">Add Customer</h2>
       <CustomerForm rounds={rounds ?? []} action={action} submitLabel="Add Customer" />
     </div>
   );

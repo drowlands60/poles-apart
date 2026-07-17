@@ -98,7 +98,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+        className="w-full py-2 px-4 bg-[#3b6d8f] text-white rounded-md hover:bg-[#2a5070] disabled:opacity-50 disabled:cursor-not-allowed font-medium"
       >
         {loading ? "Please wait..." : showReset ? "Send Reset Link" : "Sign In"}
       </button>

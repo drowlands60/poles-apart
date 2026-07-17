@@ -11,11 +11,11 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Poles Apart</h1>
-          <p className="text-gray-500 mt-2">Window Cleaning Management</p>
+          <h1 className="text-3xl font-bold text-[#1e3a5f]">Poles Apart</h1>
+          <p className="text-[#3b6d8f] mt-2">Window Cleaning Management</p>
         </div>
         <LoginForm />
       </div>

@@ -46,7 +46,7 @@ export default async function PaymentsPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Payments</h2>
+      <h2 className="text-2xl font-bold text-[#1e3a5f] mb-6">Payments</h2>
 
       {/* Summary */}
       <div className="grid grid-cols-2 gap-4 mb-6">

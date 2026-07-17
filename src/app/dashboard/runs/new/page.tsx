@@ -49,7 +49,7 @@ export default async function NewRunPage({ searchParams }: NewRunPageProps) {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Create Run</h2>
+      <h2 className="text-2xl font-bold text-[#1e3a5f] mb-6">Create Run</h2>
       <RunCreateForm
         rounds={rounds ?? []}
         cleaners={cleaners ?? []}

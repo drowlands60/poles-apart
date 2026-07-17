@@ -113,7 +113,7 @@ export function RoundViewClient({ run, customers }: RoundViewClientProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">{run.name}</h2>
+          <h2 className="text-xl font-bold text-[#1e3a5f]">{run.name}</h2>
           <p className="text-sm text-gray-500">
             {completedCustomers.length}/{customers.length} done
             {skippedCustomers.length > 0 && ` · ${skippedCustomers.length} skipped`}

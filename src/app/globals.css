@@ -2,7 +2,7 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1e3a5f;
 }
 
 @theme inline {
@@ -10,12 +10,16 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-primary: #3b6d8f;
+  --color-primary-dark: #2a5070;
+  --color-primary-light: #7bb8d4;
+  --color-accent: #a8dce8;
 }
 
 input,
 select,
 textarea {
-  color: #111827;
+  color: #1e3a5f;
 }
 
 @media (prefers-color-scheme: dark) {

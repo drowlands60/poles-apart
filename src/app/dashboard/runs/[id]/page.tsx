@@ -84,7 +84,7 @@ export default async function RunDetailPage({ params }: RunDetailPageProps) {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">{run.name}</h2>
+          <h2 className="text-2xl font-bold text-[#1e3a5f]">{run.name}</h2>
           <p className="text-sm text-gray-500">
             {new Date(run.scheduled_date).toLocaleDateString("en-GB", {
               weekday: "long",
@@ -129,11 +129,11 @@ export default async function RunDetailPage({ params }: RunDetailPageProps) {
         </div>
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <p className="text-xs text-gray-500 uppercase font-medium">Customers</p>
-          <p className="text-2xl font-bold text-gray-900">{runCustomers?.length ?? 0}</p>
+          <p className="text-2xl font-bold text-[#1e3a5f]">{runCustomers?.length ?? 0}</p>
         </div>
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <p className="text-xs text-gray-500 uppercase font-medium">Cleaners</p>
-          <p className="text-2xl font-bold text-gray-900">
+          <p className="text-2xl font-bold text-[#1e3a5f]">
             {runCleaners?.map((rc) => (rc.profiles as unknown as { full_name: string } | null)?.full_name).join(", ") || "None assigned"}
           </p>
         </div>

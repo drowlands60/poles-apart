@@ -43,7 +43,7 @@ export default async function RoundsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Round Templates</h2>
+        <h2 className="text-2xl font-bold text-[#1e3a5f]">Round Templates</h2>
         <Link
           href="/dashboard/rounds/new"
           className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"

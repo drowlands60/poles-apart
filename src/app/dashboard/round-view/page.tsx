@@ -77,7 +77,7 @@ export default async function RoundViewPage({ searchParams }: RoundViewPageProps
     if (!activeRun) {
       return (
         <div className="text-center py-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Run Not Found</h2>
+          <h2 className="text-2xl font-bold text-[#1e3a5f] mb-2">Run Not Found</h2>
           <Link href="/dashboard/round-view" className="text-blue-600 hover:text-blue-700 text-sm font-medium">
             ← Back to runs
           </Link>
@@ -133,7 +133,7 @@ export default async function RoundViewPage({ searchParams }: RoundViewPageProps
   if (availableRuns.length === 0) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">No Active Runs</h2>
+        <h2 className="text-2xl font-bold text-[#1e3a5f] mb-2">No Active Runs</h2>
         <p className="text-gray-500">You don&apos;t have any runs assigned.</p>
       </div>
     );
@@ -141,7 +141,7 @@ export default async function RoundViewPage({ searchParams }: RoundViewPageProps
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Runs</h2>
+      <h2 className="text-2xl font-bold text-[#1e3a5f] mb-6">Your Runs</h2>
       <div className="space-y-3">
         {availableRuns.map((run) => (
           <Link

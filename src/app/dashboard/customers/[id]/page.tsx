@@ -68,7 +68,7 @@ export default async function EditCustomerPage({ params }: EditCustomerPageProps
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-2xl font-bold text-[#1e3a5f]">
           Edit Customer — {customer.first_name} {customer.last_name}
         </h2>
         <DeleteCustomerButton id={customer.id} name={`${customer.first_name} ${customer.last_name}`} />

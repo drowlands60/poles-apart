@@ -23,7 +23,7 @@ export default async function NewRoundPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">New Round Template</h2>
+      <h2 className="text-2xl font-bold text-[#1e3a5f] mb-6">New Round Template</h2>
       <RoundForm action={action} submitLabel="Create Round" />
     </div>
   );
