@@ -5,7 +5,7 @@ const authToken = process.env.TWILIO_AUTH_TOKEN;
 const fromNumber = process.env.TWILIO_FROM_NUMBER;
 
 function getClient() {
-  if (!accountSid || !authToken || !fromNumber) {
+  if (!accountSid || !authToken || !fromNumber || !accountSid.startsWith("AC")) {
     return null;
   }
   return twilio(accountSid, authToken);
@@ -16,7 +16,7 @@ export async function sendSms(to: string, body: string): Promise<{ success: bool
 
   if (!client) {
     console.log(`[SMS STUB] To: ${to} | Body: ${body}`);
-    return { success: true, sid: "stub-no-twilio-configured" };
+    return { success: false, error: "Twilio not configured — add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_FROM_NUMBER to .env.local" };
   }
 
   // Ensure UK format
