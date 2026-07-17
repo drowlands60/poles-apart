@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import type { Customer } from "@/lib/types";
-import { CustomerRow } from "./customer-row";
+import { CustomerTable } from "./customer-table";
 
 export default async function CustomersPage() {
   const supabase = await createClient();
@@ -21,6 +21,9 @@ export default async function CustomersPage() {
     .from("customers")
     .select("*, rounds(name)")
     .order("last_name", { ascending: true }) as { data: (Customer & { rounds: { name: string } | null })[] | null };
+
+  // Get unique round names for filter
+  const roundNames = [...new Set((customers ?? []).map((c) => c.rounds?.name).filter(Boolean))] as string[];
 
   return (
     <div>
@@ -46,39 +49,7 @@ export default async function CustomersPage() {
           </Link>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Address
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Round
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {customers.map((customer) => (
-                  <CustomerRow key={customer.id} customer={customer} />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <CustomerTable customers={customers} roundNames={roundNames} />
       )}
     </div>
   );
