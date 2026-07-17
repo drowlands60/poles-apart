@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Search, ArrowUpDown, Filter } from "lucide-react";
+import { Search, ArrowUpDown, Pencil } from "lucide-react";
+import { AddChargeButton } from "./add-charge-button";
 
 interface CustomerWithRound {
   id: string;
@@ -220,8 +221,17 @@ export function CustomerTable({ customers, roundNames, balanceMap }: CustomerTab
                       {customer.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                    <span className="text-blue-600 font-medium">Edit</span>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-1">
+                      <AddChargeButton customerId={customer.id} compact />
+                      <button
+                        onClick={() => router.push(`/dashboard/customers/${customer.id}`)}
+                        className="p-1.5 text-[#3b6d8f] hover:bg-blue-50 rounded"
+                        title="Edit"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

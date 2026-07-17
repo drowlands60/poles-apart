@@ -122,7 +122,7 @@ export async function deleteRun(id: string) {
     .single();
   if (profile?.role !== "admin") redirect("/dashboard");
 
-  const { error } = await supabase.from("runs").delete().eq("id", id);
+  const { error } = await supabase.from("runs").update({ deleted_at: new Date().toISOString() }).eq("id", id);
 
   if (error) {
     return { error: error.message };
@@ -191,4 +191,59 @@ export async function removeCustomerFromRun(runId: string, customerId: string) {
   }
 
   revalidatePath(`/dashboard/runs/${runId}`);
+}
+
+export async function addNewCustomerToRun(runId: string, formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (profile?.role !== "admin") redirect("/dashboard");
+
+  const price = parseFloat(formData.get("price") as string) || 0;
+
+  // Create the customer
+  const { data: customer, error: custError } = await supabase
+    .from("customers")
+    .insert({
+      first_name: formData.get("first_name") as string,
+      last_name: formData.get("last_name") as string,
+      address_line1: formData.get("address_line1") as string,
+      city: formData.get("city") as string,
+      postcode: formData.get("postcode") as string,
+      phone: (formData.get("phone") as string) || null,
+      price,
+    })
+    .select("id")
+    .single();
+
+  if (custError || !customer) {
+    return { error: custError?.message ?? "Failed to create customer" };
+  }
+
+  // Get next position
+  const { data: existing } = await supabase
+    .from("run_customers")
+    .select("position")
+    .eq("run_id", runId)
+    .order("position", { ascending: false })
+    .limit(1);
+
+  const nextPosition = (existing?.[0]?.position ?? 0) + 1;
+
+  // Add to run
+  await supabase.from("run_customers").insert({
+    run_id: runId,
+    customer_id: customer.id,
+    position: nextPosition,
+    price,
+  });
+
+  revalidatePath(`/dashboard/runs/${runId}`);
+  revalidatePath("/dashboard/customers");
 }

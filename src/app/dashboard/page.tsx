@@ -6,11 +6,13 @@ export default async function DashboardPage() {
   const { count: customerCount } = await supabase
     .from("customers")
     .select("*", { count: "exact", head: true })
-    .eq("is_active", true);
+    .eq("is_active", true)
+    .is("deleted_at", null);
 
   const { count: roundCount } = await supabase
     .from("rounds")
-    .select("*", { count: "exact", head: true });
+    .select("*", { count: "exact", head: true })
+    .is("deleted_at", null);
 
   const today = new Date().toISOString().split("T")[0];
   const { count: todayJobs } = await supabase

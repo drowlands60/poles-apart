@@ -73,7 +73,7 @@ export async function deleteRound(id: string) {
     .single();
   if (profile?.role !== "admin") redirect("/dashboard");
 
-  const { error } = await supabase.from("rounds").delete().eq("id", id);
+  const { error } = await supabase.from("rounds").update({ deleted_at: new Date().toISOString() }).eq("id", id);
 
   if (error) {
     return { error: error.message };

@@ -20,6 +20,7 @@ export default async function CustomersPage() {
   const { data: customers } = await supabase
     .from("customers")
     .select("*, rounds(name)")
+    .is("deleted_at", null)
     .order("last_name", { ascending: true }) as { data: (Customer & { rounds: { name: string } | null })[] | null };
 
   // Get outstanding balances per customer

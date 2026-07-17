@@ -1,0 +1,32 @@
+name: Daily Backup
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # Runs at 2am UTC daily
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download backup
+        run: |
+          curl -s "${{ secrets.BACKUP_URL }}?token=${{ secrets.BACKUP_TOKEN }}" > backup.json
+          # Verify it's valid JSON
+          python3 -c "import json; json.load(open('backup.json'))"
+
+      - name: Commit backup
+        run: |
+          mkdir -p backups
+          DATE=$(date +%Y-%m-%d)
+          mv backup.json "backups/backup-${DATE}.json"
+          # Keep only last 30 days of backups
+          cd backups && ls -t | tail -n +31 | xargs -r rm
+          cd ..
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add backups/
+          git diff --cached --quiet || git commit -m "Backup ${DATE}"
+          git push

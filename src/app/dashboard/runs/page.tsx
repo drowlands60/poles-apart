@@ -21,6 +21,7 @@ export default async function RunsPage() {
   const { data: runs } = await supabase
     .from("runs")
     .select("*, run_cleaners(cleaner_id, profiles(full_name)), run_customers(price)")
+    .is("deleted_at", null)
     .order("scheduled_date", { ascending: false });
 
   return (

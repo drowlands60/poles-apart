@@ -18,6 +18,7 @@ export default async function RoundsPage() {
   const { data: rounds } = await supabase
     .from("rounds")
     .select("*, customers(count)")
+    .is("deleted_at", null)
     .order("name");
 
   // Get last completed run date for each round

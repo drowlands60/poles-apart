@@ -1,8 +1,8 @@
 "use client";
 
 import { useActionState, useTransition } from "react";
-import { addCustomerToRun, removeCustomerFromRun } from "../actions";
-import { X, Plus, UserPlus } from "lucide-react";
+import { addCustomerToRun, removeCustomerFromRun, addNewCustomerToRun } from "../actions";
+import { X, UserPlus, Search, Plus } from "lucide-react";
 import { useState } from "react";
 
 interface RunDetailClientProps {
@@ -136,39 +136,26 @@ export function RunDetailClient({
           <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">
             Customers ({runCustomers.length})
           </h3>
-          <button
-            onClick={() => setShowAddCustomer(!showAddCustomer)}
-            className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
-          >
-            <UserPlus className="w-4 h-4" />
-            Add Customer
-          </button>
+          {run.status !== "completed" && (
+            <button
+              onClick={() => setShowAddCustomer(!showAddCustomer)}
+              className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+            >
+              <UserPlus className="w-4 h-4" />
+              Add Customer
+            </button>
+          )}
         </div>
 
         {/* Add Customer Dropdown */}
         {showAddCustomer && (
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-            {availableCustomers.length === 0 ? (
-              <p className="text-sm text-gray-500">All active customers are already in this run.</p>
-            ) : (
-              <div className="space-y-1 max-h-48 overflow-y-auto">
-                {availableCustomers.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => handleAddCustomer(c.id, c.price)}
-                    disabled={addPending}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded flex items-center justify-between disabled:opacity-50"
-                  >
-                    <span>
-                      <span className="font-medium">{c.first_name} {c.last_name}</span>
-                      <span className="text-gray-500 ml-2">{c.address_line1}, {c.postcode}</span>
-                    </span>
-                    <span className="text-gray-700 font-medium">£{Number(c.price).toFixed(2)}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <AddCustomerPanel
+            runId={runId}
+            availableCustomers={availableCustomers}
+            onAdd={handleAddCustomer}
+            addPending={addPending}
+            onClose={() => setShowAddCustomer(false)}
+          />
         )}
 
         {/* Customer List */}
@@ -216,6 +203,129 @@ export function RunDetailClient({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// --- Add Customer Panel with search + create new ---
+function AddCustomerPanel({
+  runId,
+  availableCustomers,
+  onAdd,
+  addPending,
+  onClose,
+}: {
+  runId: string;
+  availableCustomers: { id: string; first_name: string; last_name: string; address_line1: string; postcode: string; price: number }[];
+  onAdd: (customerId: string, price: number) => void;
+  addPending: boolean;
+  onClose: () => void;
+}) {
+  const [search, setSearch] = useState("");
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [newPending, startNewTransition] = useTransition();
+
+  const filtered = search
+    ? availableCustomers.filter((c) =>
+        `${c.first_name} ${c.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
+        c.address_line1.toLowerCase().includes(search.toLowerCase())
+      )
+    : availableCustomers;
+
+  function handleNewCustomer(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    startNewTransition(async () => {
+      await addNewCustomerToRun(runId, formData);
+      onClose();
+    });
+  }
+
+  return (
+    <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+      {!showNewForm ? (
+        <>
+          <div className="flex gap-2 mb-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search name or address..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                autoFocus
+                className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+            <button
+              onClick={() => setShowNewForm(true)}
+              className="inline-flex items-center gap-1 text-xs font-medium bg-[#3b6d8f] text-white px-3 py-1.5 rounded hover:bg-[#2a5070] whitespace-nowrap"
+            >
+              <Plus className="w-3 h-3" />
+              New
+            </button>
+          </div>
+          {filtered.length === 0 ? (
+            <p className="text-sm text-gray-500 py-2">
+              {search ? "No customers match." : "All active customers are already in this run."}
+            </p>
+          ) : (
+            <div className="space-y-0.5 max-h-48 overflow-y-auto">
+              {filtered.slice(0, 20).map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => onAdd(c.id, c.price)}
+                  disabled={addPending}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded flex items-center justify-between disabled:opacity-50"
+                >
+                  <span>
+                    <span className="font-medium">{c.first_name} {c.last_name}</span>
+                    <span className="text-gray-500 ml-2">{c.address_line1}, {c.postcode}</span>
+                  </span>
+                  <span className="text-gray-700 font-medium">£{Number(c.price).toFixed(2)}</span>
+                </button>
+              ))}
+              {filtered.length > 20 && (
+                <p className="text-xs text-gray-400 px-3 py-1">Showing first 20 — refine your search</p>
+              )}
+            </div>
+          )}
+        </>
+      ) : (
+        <form onSubmit={handleNewCustomer} className="space-y-3">
+          <p className="text-sm font-medium text-gray-700">Add New Customer to Run</p>
+          <div className="grid grid-cols-2 gap-2">
+            <input name="first_name" required placeholder="First name *" className="text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+            <input name="last_name" required placeholder="Last name *" className="text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+          </div>
+          <input name="address_line1" required placeholder="Address line 1 *" className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+          <div className="grid grid-cols-2 gap-2">
+            <input name="city" required placeholder="City *" className="text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+            <input name="postcode" required placeholder="Postcode *" className="text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <input name="phone" placeholder="Phone" className="text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+            <input name="price" type="number" step="0.01" min="0" required placeholder="Price (£) *" className="text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={newPending}
+              className="text-sm font-medium bg-[#3b6d8f] text-white px-4 py-1.5 rounded hover:bg-[#2a5070] disabled:opacity-50"
+            >
+              {newPending ? "Adding..." : "Add to Run"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowNewForm(false)}
+              className="text-sm text-gray-500 hover:text-gray-700 px-3 py-1.5"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
