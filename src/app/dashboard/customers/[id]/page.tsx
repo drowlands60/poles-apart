@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
-import { updateCustomer, deleteCustomer } from "../actions";
+import { updateCustomer } from "../actions";
 import { CustomerForm } from "../customer-form";
 import { DeleteCustomerButton } from "./delete-button";
+import { AddChargeButton } from "../add-charge-button";
 
 interface EditCustomerPageProps {
   params: Promise<{ id: string }>;
@@ -55,7 +56,15 @@ export default async function EditCustomerPage({ params }: EditCustomerPageProps
     .eq("customer_id", id)
     .order("payment_date", { ascending: false });
 
-  const totalOwed = completedWork?.reduce((sum, w) => sum + Number(w.price), 0) ?? 0;
+  // Ad-hoc charges
+  const { data: adhocCharges } = await supabase
+    .from("adhoc_charges")
+    .select("amount")
+    .eq("customer_id", id)
+    .eq("paid", false);
+
+  const totalOwed = (completedWork?.reduce((sum, w) => sum + Number(w.price), 0) ?? 0)
+    + (adhocCharges?.reduce((sum, c) => sum + Number(c.amount), 0) ?? 0);
   const totalPaid = payments?.reduce((sum, p) => sum + Number(p.amount), 0) ?? 0;
   const balance = totalOwed - totalPaid;
 
@@ -75,6 +84,10 @@ export default async function EditCustomerPage({ params }: EditCustomerPageProps
       </div>
 
       {/* Balance */}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Balance</h3>
+        <AddChargeButton customerId={customer.id} />
+      </div>
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <p className="text-xs text-gray-500 uppercase font-medium">Work Done</p>

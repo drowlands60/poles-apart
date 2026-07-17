@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Check, Undo2, Search } from "lucide-react";
-import { markAsPaid, markAsUnpaid, markAllPaidForCustomer } from "./actions";
+import { markAsPaid, markAsUnpaid, markAllPaidForCustomer, markAdhocPaid, markAdhocUnpaid } from "./actions";
 
 interface PaymentItem {
   run_id: string;
@@ -11,6 +11,8 @@ interface PaymentItem {
   paid_at?: string | null;
   runs: { name: string; scheduled_date: string } | null;
   customers: { first_name: string; last_name: string; address_line1: string } | null;
+  adhoc_id?: string;
+  notes?: string | null;
 }
 
 export function PaymentsClient({ due, received }: { due: PaymentItem[]; received: PaymentItem[] }) {
@@ -33,12 +35,24 @@ export function PaymentsClient({ due, received }: { due: PaymentItem[]; received
     return acc;
   }, {});
 
-  function handlePaid(runId: string, customerId: string) {
-    startTransition(() => { markAsPaid(runId, customerId); });
+  function handlePaid(item: PaymentItem) {
+    startTransition(() => {
+      if (item.adhoc_id) {
+        markAdhocPaid(item.adhoc_id);
+      } else {
+        markAsPaid(item.run_id, item.customer_id);
+      }
+    });
   }
 
-  function handleUnpaid(runId: string, customerId: string) {
-    startTransition(() => { markAsUnpaid(runId, customerId); });
+  function handleUnpaid(item: PaymentItem) {
+    startTransition(() => {
+      if (item.adhoc_id) {
+        markAdhocUnpaid(item.adhoc_id);
+      } else {
+        markAsUnpaid(item.run_id, item.customer_id);
+      }
+    });
   }
 
   function handlePayAll(customerId: string) {
@@ -112,7 +126,7 @@ export function PaymentsClient({ due, received }: { due: PaymentItem[]; received
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-700">£{Number(item.price).toFixed(2)}</span>
                       <button
-                        onClick={() => handlePaid(item.run_id, item.customer_id)}
+                        onClick={() => handlePaid(item)}
                         disabled={pending}
                         className="p-1 text-green-600 hover:bg-green-100 rounded disabled:opacity-50"
                         title="Mark paid"
@@ -153,7 +167,7 @@ export function PaymentsClient({ due, received }: { due: PaymentItem[]; received
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-green-700">£{Number(item.price).toFixed(2)}</span>
                 <button
-                  onClick={() => handleUnpaid(item.run_id, item.customer_id)}
+                  onClick={() => handleUnpaid(item)}
                   disabled={pending}
                   className="p-1 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded disabled:opacity-50"
                   title="Mark unpaid"

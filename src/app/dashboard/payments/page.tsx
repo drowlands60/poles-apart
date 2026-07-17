@@ -22,6 +22,12 @@ export default async function PaymentsPage() {
     .eq("paid", false)
     .order("customer_id");
 
+  // Ad-hoc charges due
+  const { data: adhocDue } = await supabase
+    .from("adhoc_charges")
+    .select("id, customer_id, amount, notes, created_at, customers(first_name, last_name, address_line1)")
+    .eq("paid", false);
+
   // Payments received: completed, paid this month
   const monthStart = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-01`;
   const { data: received } = await supabase
@@ -32,6 +38,13 @@ export default async function PaymentsPage() {
     .gte("paid_at", monthStart)
     .order("paid_at", { ascending: false });
 
+  // Ad-hoc charges received this month
+  const { data: adhocReceived } = await supabase
+    .from("adhoc_charges")
+    .select("id, customer_id, amount, notes, paid_at, customers(first_name, last_name, address_line1)")
+    .eq("paid", true)
+    .gte("paid_at", monthStart);
+
   type PaymentItem = {
     run_id: string;
     customer_id: string;
@@ -39,10 +52,40 @@ export default async function PaymentsPage() {
     paid_at?: string | null;
     runs: { name: string; scheduled_date: string } | null;
     customers: { first_name: string; last_name: string; address_line1: string } | null;
+    adhoc_id?: string;
+    notes?: string | null;
   };
 
-  const totalDue = due?.reduce((sum, d) => sum + Number(d.price), 0) ?? 0;
-  const totalReceived = received?.reduce((sum, r) => sum + Number(r.price), 0) ?? 0;
+  // Merge adhoc into due/received as PaymentItems
+  const allDue: PaymentItem[] = [
+    ...((due as unknown as PaymentItem[]) ?? []),
+    ...((adhocDue ?? []).map((a) => ({
+      run_id: "",
+      customer_id: a.customer_id,
+      price: Number(a.amount),
+      runs: { name: "Ad-hoc charge", scheduled_date: a.created_at.split("T")[0] },
+      customers: a.customers as unknown as { first_name: string; last_name: string; address_line1: string } | null,
+      adhoc_id: a.id,
+      notes: a.notes,
+    }))),
+  ];
+
+  const allReceived: PaymentItem[] = [
+    ...((received as unknown as PaymentItem[]) ?? []),
+    ...((adhocReceived ?? []).map((a) => ({
+      run_id: "",
+      customer_id: a.customer_id,
+      price: Number(a.amount),
+      paid_at: a.paid_at,
+      runs: { name: "Ad-hoc charge", scheduled_date: "" },
+      customers: a.customers as unknown as { first_name: string; last_name: string; address_line1: string } | null,
+      adhoc_id: a.id,
+      notes: a.notes,
+    }))),
+  ];
+
+  const totalDue = allDue.reduce((sum, d) => sum + Number(d.price), 0);
+  const totalReceived = allReceived.reduce((sum, r) => sum + Number(r.price), 0);
 
   return (
     <div>
@@ -63,8 +106,8 @@ export default async function PaymentsPage() {
       </div>
 
       <PaymentsClient
-        due={(due as unknown as PaymentItem[]) ?? []}
-        received={(received as unknown as PaymentItem[]) ?? []}
+        due={allDue}
+        received={allReceived}
       />
     </div>
   );

@@ -29,10 +29,20 @@ export default async function CustomersPage() {
     .eq("status", "completed")
     .eq("paid", false);
 
+  const { data: unpaidAdhoc } = await supabase
+    .from("adhoc_charges")
+    .select("customer_id, amount")
+    .eq("paid", false);
+
   const balanceMap: Record<string, number> = {};
   if (unpaidItems) {
     for (const item of unpaidItems) {
       balanceMap[item.customer_id] = (balanceMap[item.customer_id] ?? 0) + Number(item.price);
+    }
+  }
+  if (unpaidAdhoc) {
+    for (const item of unpaidAdhoc) {
+      balanceMap[item.customer_id] = (balanceMap[item.customer_id] ?? 0) + Number(item.amount);
     }
   }
 
