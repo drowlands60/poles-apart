@@ -19,7 +19,7 @@ export function LoginForm() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -28,7 +28,12 @@ export function LoginForm() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push("/dashboard");
+      // Check if user must change password on first login
+      if (data.user?.user_metadata?.must_change_password) {
+        router.push("/auth/reset-password?first=true");
+      } else {
+        router.push("/dashboard");
+      }
       router.refresh();
     }
   }

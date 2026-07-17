@@ -23,11 +23,11 @@ export function MobileNav({ role, name }: MobileNavProps) {
       {open && (
         <div className="absolute top-16 left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-50">
           <div className="px-4 py-3 space-y-1">
-            <a href="/dashboard" className="block px-3 py-2 text-[#3b6d8f] hover:bg-slate-50 hover:text-[#1e3a5f] rounded-lg text-sm font-medium">
-              Dashboard
-            </a>
             {role === "admin" && (
               <>
+                <a href="/dashboard" className="block px-3 py-2 text-[#3b6d8f] hover:bg-slate-50 hover:text-[#1e3a5f] rounded-lg text-sm font-medium">
+                  Dashboard
+                </a>
                 <a href="/dashboard/customers" className="block px-3 py-2 text-[#3b6d8f] hover:bg-slate-50 hover:text-[#1e3a5f] rounded-lg text-sm font-medium">
                   Customers
                 </a>
@@ -39,6 +39,9 @@ export function MobileNav({ role, name }: MobileNavProps) {
                 </a>
                 <a href="/dashboard/payments" className="block px-3 py-2 text-[#3b6d8f] hover:bg-slate-50 hover:text-[#1e3a5f] rounded-lg text-sm font-medium">
                   Payments
+                </a>
+                <a href="/dashboard/cleaners" className="block px-3 py-2 text-[#3b6d8f] hover:bg-slate-50 hover:text-[#1e3a5f] rounded-lg text-sm font-medium">
+                  Cleaners
                 </a>
               </>
             )}

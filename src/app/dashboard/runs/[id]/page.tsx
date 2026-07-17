@@ -57,7 +57,15 @@ export default async function RunDetailPage({ params }: RunDetailPageProps) {
     .from("customers")
     .select("id, first_name, last_name, address_line1, postcode, price")
     .eq("is_active", true)
+    .is("deleted_at", null)
     .order("last_name");
+
+  // All rounds (for adding a whole round)
+  const { data: allRounds } = await supabase
+    .from("rounds")
+    .select("id, name")
+    .is("deleted_at", null)
+    .order("name");
 
   const filteredAvailable = availableCustomers?.filter(
     (c) => !existingCustomerIds.includes(c.id)
@@ -150,6 +158,7 @@ export default async function RunDetailPage({ params }: RunDetailPageProps) {
         runCustomers={(runCustomers as unknown as React.ComponentProps<typeof RunDetailClient>["runCustomers"]) ?? []}
         allCleaners={allCleaners ?? []}
         availableCustomers={filteredAvailable}
+        allRounds={allRounds ?? []}
         updateAction={handleUpdate}
       />
     </div>

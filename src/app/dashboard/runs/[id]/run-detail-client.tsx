@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useTransition } from "react";
-import { addCustomerToRun, removeCustomerFromRun, addNewCustomerToRun } from "../actions";
+import { addCustomerToRun, removeCustomerFromRun, addNewCustomerToRun, addRoundToRun } from "../actions";
 import { X, UserPlus, Search, Plus } from "lucide-react";
 import { useState } from "react";
 
@@ -18,6 +18,7 @@ interface RunDetailClientProps {
   }[];
   allCleaners: { id: string; full_name: string }[];
   availableCustomers: { id: string; first_name: string; last_name: string; address_line1: string; postcode: string; price: number }[];
+  allRounds: { id: string; name: string }[];
   updateAction: (prevState: { error?: string } | undefined, formData: FormData) => Promise<{ error?: string } | undefined>;
 }
 
@@ -28,10 +29,14 @@ export function RunDetailClient({
   runCustomers,
   allCleaners,
   availableCustomers,
+  allRounds,
   updateAction,
 }: RunDetailClientProps) {
   const [state, formAction, pending] = useActionState(updateAction, undefined);
   const [showAddCustomer, setShowAddCustomer] = useState(false);
+  const [showAddRound, setShowAddRound] = useState(false);
+  const [roundPending, startRoundTransition] = useTransition();
+  const [roundResult, setRoundResult] = useState<string | null>(null);
   const [removePending, startRemoveTransition] = useTransition();
   const [addPending, startAddTransition] = useTransition();
 
@@ -137,15 +142,57 @@ export function RunDetailClient({
             Customers ({runCustomers.length})
           </h3>
           {run.status !== "completed" && (
-            <button
-              onClick={() => setShowAddCustomer(!showAddCustomer)}
-              className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
-            >
-              <UserPlus className="w-4 h-4" />
-              Add Customer
-            </button>
+            <div className="flex items-center gap-2">
+              {allRounds.length > 0 && (
+                <button
+                  onClick={() => { setShowAddRound(!showAddRound); setShowAddCustomer(false); }}
+                  className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Round
+                </button>
+              )}
+              <button
+                onClick={() => { setShowAddCustomer(!showAddCustomer); setShowAddRound(false); }}
+                className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+              >
+                <UserPlus className="w-4 h-4" />
+                Add Customer
+              </button>
+            </div>
           )}
         </div>
+        {roundResult && (
+          <p className={`text-xs mb-3 ${roundResult.startsWith("Added") ? "text-green-600" : "text-red-600"}`}>
+            {roundResult}
+          </p>
+        )}
+
+        {/* Add Round Panel */}
+        {showAddRound && (
+          <div className="mb-4 p-3 bg-white rounded-lg border border-gray-200">
+            <p className="text-xs font-medium text-gray-900 mb-2">Add all customers from a round:</p>
+            <div className="space-y-1">
+              {allRounds.map((r) => (
+                <button
+                  key={r.id}
+                  onClick={() => {
+                    startRoundTransition(async () => {
+                      const res = await addRoundToRun(runId, r.id);
+                      if (res && "error" in res) setRoundResult(res.error ?? null);
+                      else if (res && "added" in res) setRoundResult(`Added ${res.added} customers from ${r.name}`);
+                      setShowAddRound(false);
+                    });
+                  }}
+                  disabled={roundPending}
+                  className="w-full text-left px-3 py-2 text-sm text-gray-900 font-medium hover:bg-blue-50 rounded disabled:opacity-50"
+                >
+                  {r.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Add Customer Dropdown */}
         {showAddCustomer && (
@@ -243,7 +290,7 @@ function AddCustomerPanel({
   }
 
   return (
-    <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+    <div className="mb-4 p-3 bg-white rounded-lg border border-gray-200">
       {!showNewForm ? (
         <>
           <div className="flex gap-2 mb-2">
@@ -280,10 +327,10 @@ function AddCustomerPanel({
                   className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded flex items-center justify-between disabled:opacity-50"
                 >
                   <span>
-                    <span className="font-medium">{c.first_name} {c.last_name}</span>
-                    <span className="text-gray-500 ml-2">{c.address_line1}, {c.postcode}</span>
+                    <span className="font-medium text-gray-900">{c.first_name} {c.last_name}</span>
+                    <span className="text-gray-600 ml-2">{c.address_line1}, {c.postcode}</span>
                   </span>
-                  <span className="text-gray-700 font-medium">£{Number(c.price).toFixed(2)}</span>
+                  <span className="text-gray-900 font-medium">£{Number(c.price).toFixed(2)}</span>
                 </button>
               ))}
               {filtered.length > 20 && (

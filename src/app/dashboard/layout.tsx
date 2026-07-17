@@ -28,11 +28,11 @@ export default async function DashboardLayout({
             <div className="flex items-center gap-8">
               <h1 className="text-xl font-bold text-[#1e3a5f]">Poles Apart</h1>
               <div className="hidden md:flex gap-4">
-                <a href="/dashboard" className="text-[#3b6d8f] hover:text-[#1e3a5f] px-3 py-2 text-sm font-medium">
-                  Dashboard
-                </a>
                 {profile?.role === "admin" && (
                   <>
+                    <a href="/dashboard" className="text-[#3b6d8f] hover:text-[#1e3a5f] px-3 py-2 text-sm font-medium">
+                      Dashboard
+                    </a>
                     <a href="/dashboard/customers" className="text-[#3b6d8f] hover:text-[#1e3a5f] px-3 py-2 text-sm font-medium">
                       Customers
                     </a>
@@ -44,6 +44,9 @@ export default async function DashboardLayout({
                     </a>
                     <a href="/dashboard/payments" className="text-[#3b6d8f] hover:text-[#1e3a5f] px-3 py-2 text-sm font-medium">
                       Payments
+                    </a>
+                    <a href="/dashboard/cleaners" className="text-[#3b6d8f] hover:text-[#1e3a5f] px-3 py-2 text-sm font-medium">
+                      Cleaners
                     </a>
                   </>
                 )}

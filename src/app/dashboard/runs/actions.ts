@@ -247,3 +247,63 @@ export async function addNewCustomerToRun(runId: string, formData: FormData) {
   revalidatePath(`/dashboard/runs/${runId}`);
   revalidatePath("/dashboard/customers");
 }
+
+export async function addRoundToRun(runId: string, roundId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (profile?.role !== "admin") redirect("/dashboard");
+
+  // Get customers from the round template
+  const { data: templateCustomers } = await supabase
+    .from("customers")
+    .select("id, price, position_in_round")
+    .eq("round_id", roundId)
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .order("position_in_round", { ascending: true });
+
+  if (!templateCustomers || templateCustomers.length === 0) {
+    return { error: "No active customers in this round" };
+  }
+
+  // Get existing customer IDs in this run to avoid duplicates
+  const { data: existing } = await supabase
+    .from("run_customers")
+    .select("customer_id, position")
+    .eq("run_id", runId)
+    .order("position", { ascending: false });
+
+  const existingIds = new Set(existing?.map((e) => e.customer_id) ?? []);
+  const maxPosition = existing?.[0]?.position ?? 0;
+
+  // Filter out customers already in the run
+  const newCustomers = templateCustomers.filter((c) => !existingIds.has(c.id));
+
+  if (newCustomers.length === 0) {
+    return { error: "All customers from this round are already in the run" };
+  }
+
+  // Insert new customers
+  const inserts = newCustomers.map((c, i) => ({
+    run_id: runId,
+    customer_id: c.id,
+    position: maxPosition + i + 1,
+    price: c.price,
+  }));
+
+  const { error } = await supabase.from("run_customers").insert(inserts);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath(`/dashboard/runs/${runId}`);
+  return { added: newCustomers.length };
+}
