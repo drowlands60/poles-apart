@@ -3,9 +3,6 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Plus, AlertTriangle } from "lucide-react";
 
-const TARGET_TURNOVER_TWO = 340;
-const TARGET_TURNOVER_ONE = 200;
-
 export default async function RunsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -23,6 +20,15 @@ export default async function RunsPage() {
     .select("*, run_cleaners(cleaner_id, profiles(full_name)), run_customers(price)")
     .is("deleted_at", null)
     .order("scheduled_date", { ascending: false });
+
+  const { data: settings } = await supabase
+    .from("app_settings")
+    .select("target_turnover_one, target_turnover_two")
+    .eq("id", 1)
+    .single();
+
+  const targetOne = settings?.target_turnover_one ?? 200;
+  const targetTwo = settings?.target_turnover_two ?? 340;
 
   return (
     <div>
@@ -55,7 +61,7 @@ export default async function RunsPage() {
               0
             ) ?? 0;
             const cleanerCount = run.run_cleaners?.length ?? 0;
-            const target = cleanerCount >= 2 ? TARGET_TURNOVER_TWO : TARGET_TURNOVER_ONE;
+            const target = cleanerCount >= 2 ? targetTwo : targetOne;
             const belowTarget = cleanerCount > 0 && turnover < target;
 
             return (

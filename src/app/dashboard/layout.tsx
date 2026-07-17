@@ -51,7 +51,7 @@ export default async function DashboardLayout({
                   </>
                 )}
                 <a href="/dashboard/round-view" className="text-[#3b6d8f] hover:text-[#1e3a5f] px-3 py-2 text-sm font-medium">
-                  Round View
+                  Run View
                 </a>
               </div>
             </div>

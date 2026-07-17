@@ -49,11 +49,31 @@ export async function sendDayBeforeNotifications(runId: string) {
     if (!customer?.phone) {
       skipped++;
       details.push({ name, status: "skipped", reason: "no phone" });
+      if (customer) {
+        await adminSupabase.from("sms_log").insert({
+          customer_id: customer.id,
+          run_id: runId,
+          message_type: "day_before",
+          message_body: "",
+          phone_number: "",
+          status: "skipped",
+          error_message: "no phone",
+        });
+      }
       continue;
     }
     if (!customer.sms_opt_in) {
       skipped++;
       details.push({ name, status: "skipped", reason: "opted out" });
+      await adminSupabase.from("sms_log").insert({
+        customer_id: customer.id,
+        run_id: runId,
+        message_type: "day_before",
+        message_body: "",
+        phone_number: customer.phone,
+        status: "skipped",
+        error_message: "opted out",
+      });
       continue;
     }
 
@@ -63,6 +83,7 @@ export async function sendDayBeforeNotifications(runId: string) {
     // Log to sms_log
     await adminSupabase.from("sms_log").insert({
       customer_id: customer.id,
+      run_id: runId,
       message_type: "day_before",
       message_body: body,
       phone_number: customer.phone,
@@ -74,6 +95,7 @@ export async function sendDayBeforeNotifications(runId: string) {
     if (result.success) {
       sent++;
       details.push({ name, status: "sent" });
+      await supabase.from("run_customers").update({ sms_day_before_sent: true }).eq("run_id", runId).eq("customer_id", customer.id);
     } else {
       skipped++;
       details.push({ name, status: "skipped", reason: "send failed" });
@@ -119,11 +141,31 @@ export async function sendCompletedNotifications(runId: string) {
     if (!customer?.phone) {
       skipped++;
       details.push({ name, status: "skipped", reason: "no phone" });
+      if (customer) {
+        await adminSupabase.from("sms_log").insert({
+          customer_id: customer.id,
+          run_id: runId,
+          message_type: "completed",
+          message_body: "",
+          phone_number: "",
+          status: "skipped",
+          error_message: "no phone",
+        });
+      }
       continue;
     }
     if (!customer.sms_opt_in) {
       skipped++;
       details.push({ name, status: "skipped", reason: "opted out" });
+      await adminSupabase.from("sms_log").insert({
+        customer_id: customer.id,
+        run_id: runId,
+        message_type: "completed",
+        message_body: "",
+        phone_number: customer.phone,
+        status: "skipped",
+        error_message: "opted out",
+      });
       continue;
     }
 
@@ -133,6 +175,7 @@ export async function sendCompletedNotifications(runId: string) {
     // Log to sms_log
     await adminSupabase.from("sms_log").insert({
       customer_id: customer.id,
+      run_id: runId,
       message_type: "completed",
       message_body: body,
       phone_number: customer.phone,
@@ -144,6 +187,7 @@ export async function sendCompletedNotifications(runId: string) {
     if (result.success) {
       sent++;
       details.push({ name, status: "sent" });
+      await supabase.from("run_customers").update({ sms_completed_sent: true }).eq("run_id", runId).eq("customer_id", customer.id);
     } else {
       skipped++;
       details.push({ name, status: "skipped", reason: "send failed" });
@@ -152,4 +196,71 @@ export async function sendCompletedNotifications(runId: string) {
 
   revalidatePath(`/dashboard/runs/${runId}`);
   return { sent, skipped, total: runCustomers.length, details };
+}
+
+export async function sendSingleNotification(runId: string, customerId: string, type: "day_before" | "completed") {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (profile?.role !== "admin") return { error: "Admin only" };
+
+  const { data: customer } = await supabase
+    .from("customers")
+    .select("id, first_name, phone, sms_opt_in")
+    .eq("id", customerId)
+    .single();
+
+  if (!customer) return { error: "Customer not found" };
+  if (!customer.phone) return { error: "No phone number" };
+  if (!customer.sms_opt_in) return { error: "Customer opted out" };
+
+  const { data: runCustomer } = await supabase
+    .from("run_customers")
+    .select("price")
+    .eq("run_id", runId)
+    .eq("customer_id", customerId)
+    .single();
+
+  if (!runCustomer) return { error: "Customer not in this run" };
+
+  const { data: run } = await supabase
+    .from("runs")
+    .select("scheduled_date")
+    .eq("id", runId)
+    .single();
+
+  if (!run) return { error: "Run not found" };
+
+  const body = type === "day_before"
+    ? buildDayBeforeMessage(customer.first_name, run.scheduled_date)
+    : buildCompletedMessage(customer.first_name, Number(runCustomer.price));
+
+  const result = await sendSms(customer.phone, body);
+
+  if (!result.success) {
+    return { error: result.error ?? "Send failed" };
+  }
+
+  const adminSupabase = createAdminClient();
+  await adminSupabase.from("sms_log").insert({
+    customer_id: customerId,
+    run_id: runId,
+    message_type: type,
+    message_body: body,
+    phone_number: customer.phone,
+    status: "sent",
+    sent_at: new Date().toISOString(),
+  });
+
+  const flagCol = type === "day_before" ? "sms_day_before_sent" : "sms_completed_sent";
+  await supabase.from("run_customers").update({ [flagCol]: true }).eq("run_id", runId).eq("customer_id", customerId);
+
+  revalidatePath(`/dashboard/runs/${runId}`);
+  return { success: true };
 }

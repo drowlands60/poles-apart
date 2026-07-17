@@ -91,6 +91,11 @@ export default async function RoundViewPage({ searchParams }: RoundViewPageProps
       .eq("run_id", activeRun.id)
       .order("position", { ascending: true });
 
+    const { data: extras } = await supabase
+      .from("run_customer_extras")
+      .select("id, customer_id, description, price")
+      .eq("run_id", activeRun.id);
+
     type RunCustomer = {
       customer_id: string;
       position: number;
@@ -123,6 +128,7 @@ export default async function RoundViewPage({ searchParams }: RoundViewPageProps
         <RoundViewClient
           run={activeRun}
           customers={(customers as unknown as RunCustomer[]) ?? []}
+          extras={extras ?? []}
           googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ""}
         />
       </div>

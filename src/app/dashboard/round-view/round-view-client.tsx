@@ -45,10 +45,11 @@ interface CustomerData {
 interface RoundViewClientProps {
   run: { id: string; name: string; scheduled_date: string; status: string };
   customers: CustomerData[];
+  extras: { id: string; customer_id: string; description: string; price: number }[];
   googleMapsApiKey: string;
 }
 
-export function RoundViewClient({ run, customers }: RoundViewClientProps) {
+export function RoundViewClient({ run, customers, extras }: RoundViewClientProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState("");
   const [pending, startTransition] = useTransition();
@@ -119,14 +120,7 @@ export function RoundViewClient({ run, customers }: RoundViewClientProps) {
             {skippedCustomers.length > 0 && ` · ${skippedCustomers.length} skipped`}
           </p>
         </div>
-        <div className="text-right">
-          <p className="text-sm font-medium text-gray-700">
-            £{customers.reduce((sum, c) => sum + (c.status === "completed" ? Number(c.price) : 0), 0).toFixed(2)} earned
-          </p>
-          <p className="text-xs text-gray-500">
-            of £{customers.reduce((sum, c) => sum + Number(c.price), 0).toFixed(2)} total
-          </p>
-        </div>
+
       </div>
 
       {/* Progress bar */}
@@ -158,8 +152,16 @@ export function RoundViewClient({ run, customers }: RoundViewClientProps) {
                   📝 {nextCustomer.customers.notes}
                 </p>
               )}
+              {extras.filter((e) => e.customer_id === nextCustomer.customer_id).length > 0 && (
+                <div className="mt-1 space-y-0.5">
+                  {extras.filter((e) => e.customer_id === nextCustomer.customer_id).map((extra) => (
+                    <p key={extra.id} className="text-xs text-blue-700 bg-blue-100 px-2 py-0.5 rounded inline-block mr-1">
+                      + {extra.description}
+                    </p>
+                  ))}
+                </div>
+              )}
             </div>
-            <p className="text-lg font-bold text-gray-900">£{Number(nextCustomer.price).toFixed(2)}</p>
           </div>
           <div className="flex gap-2 mt-3">
             <button
@@ -203,7 +205,7 @@ export function RoundViewClient({ run, customers }: RoundViewClientProps) {
           <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
           <p className="text-lg font-bold text-green-800">Round Complete!</p>
           <p className="text-sm text-green-600">
-            {completedCustomers.length} completed · £{customers.reduce((sum, c) => sum + (c.status === "completed" ? Number(c.price) : 0), 0).toFixed(2)} earned
+            {completedCustomers.length} completed
           </p>
           {run.status !== "completed" && (
             <button
@@ -235,6 +237,7 @@ export function RoundViewClient({ run, customers }: RoundViewClientProps) {
                     expanded={expandedId === c.customer_id}
                     pending={pending}
                     noteText={expandedId === c.customer_id ? noteText : ""}
+                    extras={extras.filter((e) => e.customer_id === c.customer_id)}
                     onToggleExpand={() => toggleExpand(c.customer_id)}
                     onComplete={() => handleComplete(c.customer_id)}
                     onSkip={() => handleSkip(c.customer_id)}
@@ -283,7 +286,6 @@ export function RoundViewClient({ run, customers }: RoundViewClientProps) {
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <span className="text-sm text-gray-500">£{Number(c.price).toFixed(2)}</span>
                       <button
                         onClick={() => openNavigation(cust?.address_line1 ?? "", cust?.postcode ?? "")}
                         className="p-1.5 text-blue-500 hover:bg-blue-100 rounded"
@@ -358,6 +360,7 @@ interface SortableCustomerRowProps {
   expanded: boolean;
   pending: boolean;
   noteText: string;
+  extras: { id: string; customer_id: string; description: string; price: number }[];
   onToggleExpand: () => void;
   onComplete: () => void;
   onSkip: () => void;
@@ -372,6 +375,7 @@ function SortableCustomerRow({
   expanded,
   pending,
   noteText,
+  extras,
   onToggleExpand,
   onComplete,
   onSkip,
@@ -412,6 +416,15 @@ function SortableCustomerRow({
             <p className="text-xs text-gray-500 truncate">
               {cust?.address_line1}, {cust?.postcode}
             </p>
+            {extras.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-0.5">
+                {extras.map((extra) => (
+                  <span key={extra.id} className="text-xs text-blue-700 bg-blue-100 px-1.5 py-0 rounded">
+                    + {extra.description}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         {/* Right: always-visible actions */}

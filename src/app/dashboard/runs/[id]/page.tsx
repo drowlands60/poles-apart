@@ -5,9 +5,6 @@ import { AlertTriangle, Trash2 } from "lucide-react";
 import { RunDetailClient } from "./run-detail-client";
 import { SmsButtons } from "./sms-buttons";
 
-const TARGET_TURNOVER_TWO = 340;
-const TARGET_TURNOVER_ONE = 200;
-
 interface RunDetailPageProps {
   params: Promise<{ id: string }>;
 }
@@ -71,11 +68,54 @@ export default async function RunDetailPage({ params }: RunDetailPageProps) {
     (c) => !existingCustomerIds.includes(c.id)
   ) ?? [];
 
+  // Extras (additional jobs per customer)
+  const { data: extras } = await supabase
+    .from("run_customer_extras")
+    .select("id, customer_id, description, price")
+    .eq("run_id", id);
+
   // Turnover calculation
-  const turnover = runCustomers?.reduce((sum, rc) => sum + Number(rc.price), 0) ?? 0;
+  const { data: settings } = await supabase
+    .from("app_settings")
+    .select("target_turnover_one, target_turnover_two")
+    .eq("id", 1)
+    .single();
+
+  const extrasTurnover = extras?.reduce((sum, e) => sum + Number(e.price), 0) ?? 0;
+  const turnover = (runCustomers?.reduce((sum, rc) => sum + Number(rc.price), 0) ?? 0) + extrasTurnover;
   const cleanerCount = runCleaners?.length ?? 0;
-  const target = cleanerCount >= 2 ? TARGET_TURNOVER_TWO : TARGET_TURNOVER_ONE;
+  const targetOne = settings?.target_turnover_one ?? 200;
+  const targetTwo = settings?.target_turnover_two ?? 340;
+  const target = cleanerCount >= 2 ? targetTwo : targetOne;
   const belowTarget = cleanerCount > 0 && turnover < target;
+
+  // Customer SMS data for the SMS panel
+  const smsCustomers = runCustomers?.map((rc) => {
+    const c = rc.customers as unknown as { id: string; first_name: string; last_name: string; phone: string | null } | null;
+    return {
+      customer_id: rc.customer_id,
+      first_name: c?.first_name ?? "",
+      last_name: c?.last_name ?? "",
+      phone: c?.phone ?? null,
+      sms_opt_in: true,
+      sms_day_before_sent: rc.sms_day_before_sent ?? false,
+      sms_completed_sent: rc.sms_completed_sent ?? false,
+    };
+  }) ?? [];
+
+  // Get sms_opt_in for all customers in this run
+  if (smsCustomers.length > 0) {
+    const { data: optIns } = await supabase
+      .from("customers")
+      .select("id, sms_opt_in")
+      .in("id", smsCustomers.map((c) => c.customer_id));
+    if (optIns) {
+      const optInMap = new Map(optIns.map((o) => [o.id, o.sms_opt_in]));
+      for (const c of smsCustomers) {
+        c.sms_opt_in = optInMap.get(c.customer_id) ?? true;
+      }
+    }
+  }
 
   async function handleUpdate(_prevState: { error?: string } | undefined, formData: FormData) {
     "use server";
@@ -148,7 +188,7 @@ export default async function RunDetailPage({ params }: RunDetailPageProps) {
       </div>
 
       {/* SMS Notifications */}
-      <SmsButtons runId={id} runStatus={run.status} />
+      <SmsButtons runId={id} runStatus={run.status} customers={smsCustomers} />
 
       {/* Client-side interactive section */}
       <RunDetailClient
@@ -159,6 +199,7 @@ export default async function RunDetailPage({ params }: RunDetailPageProps) {
         allCleaners={allCleaners ?? []}
         availableCustomers={filteredAvailable}
         allRounds={allRounds ?? []}
+        extras={extras ?? []}
         updateAction={handleUpdate}
       />
     </div>

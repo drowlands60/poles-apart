@@ -1,8 +1,8 @@
 "use client";
 
 import { useActionState, useTransition } from "react";
-import { addCustomerToRun, removeCustomerFromRun, addNewCustomerToRun, addRoundToRun } from "../actions";
-import { X, UserPlus, Search, Plus } from "lucide-react";
+import { addCustomerToRun, removeCustomerFromRun, addNewCustomerToRun, addRoundToRun, addExtraToCustomer, removeExtra } from "../actions";
+import { X, UserPlus, Search, Plus, PlusCircle } from "lucide-react";
 import { useState } from "react";
 
 interface RunDetailClientProps {
@@ -19,6 +19,7 @@ interface RunDetailClientProps {
   allCleaners: { id: string; full_name: string }[];
   availableCustomers: { id: string; first_name: string; last_name: string; address_line1: string; postcode: string; price: number }[];
   allRounds: { id: string; name: string }[];
+  extras: { id: string; customer_id: string; description: string; price: number }[];
   updateAction: (prevState: { error?: string } | undefined, formData: FormData) => Promise<{ error?: string } | undefined>;
 }
 
@@ -30,6 +31,7 @@ export function RunDetailClient({
   allCleaners,
   availableCustomers,
   allRounds,
+  extras,
   updateAction,
 }: RunDetailClientProps) {
   const [state, formAction, pending] = useActionState(updateAction, undefined);
@@ -39,6 +41,8 @@ export function RunDetailClient({
   const [roundResult, setRoundResult] = useState<string | null>(null);
   const [removePending, startRemoveTransition] = useTransition();
   const [addPending, startAddTransition] = useTransition();
+  const [extraPending, startExtraTransition] = useTransition();
+  const [addingExtraFor, setAddingExtraFor] = useState<string | null>(null);
 
   function handleRemoveCustomer(customerId: string) {
     startRemoveTransition(() => {
@@ -212,38 +216,113 @@ export function RunDetailClient({
           <div className="divide-y divide-gray-100">
             {runCustomers.map((rc, i) => {
               const cust = rc.customers;
+              const customerExtras = extras.filter((e) => e.customer_id === rc.customer_id);
               return (
-              <div key={rc.customer_id} className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-medium text-gray-400 w-5 text-center">{i + 1}</span>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {cust?.first_name} {cust?.last_name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {cust?.address_line1}, {cust?.postcode}
-                    </p>
+              <div key={rc.customer_id} className="py-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-medium text-gray-400 w-5 text-center">{i + 1}</span>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {cust?.first_name} {cust?.last_name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {cust?.address_line1}, {cust?.postcode}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-gray-700">£{Number(rc.price).toFixed(2)}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      rc.status === "completed" ? "bg-green-100 text-green-700" :
+                      rc.status === "skipped" ? "bg-gray-100 text-gray-600" :
+                      rc.status === "cancelled" ? "bg-red-100 text-red-600" :
+                      "bg-blue-50 text-blue-700"
+                    }`}>
+                      {rc.status}
+                    </span>
+                    <button
+                      onClick={() => setAddingExtraFor(addingExtraFor === rc.customer_id ? null : rc.customer_id)}
+                      className="text-gray-400 hover:text-green-600"
+                      title="Add extra job"
+                    >
+                      <PlusCircle className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleRemoveCustomer(rc.customer_id)}
+                      disabled={removePending}
+                      className="text-gray-400 hover:text-red-500 disabled:opacity-50"
+                      title="Remove from run"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-gray-700">£{Number(rc.price).toFixed(2)}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    rc.status === "completed" ? "bg-green-100 text-green-700" :
-                    rc.status === "skipped" ? "bg-gray-100 text-gray-600" :
-                    rc.status === "cancelled" ? "bg-red-100 text-red-600" :
-                    "bg-blue-50 text-blue-700"
-                  }`}>
-                    {rc.status}
-                  </span>
-                  <button
-                    onClick={() => handleRemoveCustomer(rc.customer_id)}
-                    disabled={removePending}
-                    className="text-gray-400 hover:text-red-500 disabled:opacity-50"
-                    title="Remove from run"
+                {/* Extras for this customer */}
+                {customerExtras.length > 0 && (
+                  <div className="ml-8 mt-1 space-y-0.5">
+                    {customerExtras.map((extra) => (
+                      <div key={extra.id} className="flex items-center justify-between text-xs">
+                        <span className="text-gray-600">+ {extra.description}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-700 font-medium">£{Number(extra.price).toFixed(2)}</span>
+                          <button
+                            onClick={() => startExtraTransition(() => { removeExtra(runId, extra.id); })}
+                            disabled={extraPending}
+                            className="text-gray-400 hover:text-red-500 disabled:opacity-50"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Add extra form */}
+                {addingExtraFor === rc.customer_id && (
+                  <form
+                    className="ml-8 mt-2 flex items-center gap-2"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const form = e.currentTarget;
+                      const description = (form.elements.namedItem("description") as HTMLInputElement).value;
+                      const price = parseFloat((form.elements.namedItem("price") as HTMLInputElement).value);
+                      if (!description || isNaN(price)) return;
+                      startExtraTransition(() => { addExtraToCustomer(runId, rc.customer_id, description, price); });
+                      setAddingExtraFor(null);
+                    }}
                   >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
+                    <input
+                      name="description"
+                      required
+                      placeholder="e.g. Conservatory clean"
+                      className="flex-1 text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <input
+                      name="price"
+                      required
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Price"
+                      className="w-20 text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <button
+                      type="submit"
+                      disabled={extraPending}
+                      className="text-xs font-medium text-white bg-green-600 px-2 py-1 rounded hover:bg-green-700 disabled:opacity-50"
+                    >
+                      Add
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAddingExtraFor(null)}
+                      className="text-xs text-gray-500 hover:text-gray-700"
+                    >
+                      Cancel
+                    </button>
+                  </form>
+                )}
               </div>
               );
             })}

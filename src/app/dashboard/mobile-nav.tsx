@@ -46,7 +46,7 @@ export function MobileNav({ role, name }: MobileNavProps) {
               </>
             )}
             <a href="/dashboard/round-view" className="block px-3 py-2 text-[#3b6d8f] hover:bg-slate-50 hover:text-[#1e3a5f] rounded-lg text-sm font-medium">
-              Round View
+              Run View
             </a>
             <hr className="border-gray-200 my-2" />
             <div className="px-3 py-2 text-xs text-gray-500">{name} ({role})</div>

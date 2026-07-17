@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import { updateRound } from "../actions";
 import { RoundForm } from "../round-form";
+import { RoundCustomerList } from "../round-customer-list";
 import { DeleteRoundButton } from "./delete-button";
 
 interface EditRoundPageProps {
@@ -63,36 +64,7 @@ export default async function EditRoundPage({ params }: EditRoundPageProps) {
           When you create a run, these customers will be copied in.
         </p>
         {customers && customers.length > 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">#</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Address</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {customers.map((c, i) => (
-                  <tr key={c.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 text-sm text-gray-500">{c.position_in_round ?? i + 1}</td>
-                    <td className="px-4 py-2 text-sm text-gray-900">{c.first_name} {c.last_name}</td>
-                    <td className="px-4 py-2 text-sm text-gray-500">{c.address_line1}, {c.postcode}</td>
-                    <td className="px-4 py-2 text-sm text-gray-900">£{Number(c.price).toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot className="bg-gray-50">
-                <tr>
-                  <td colSpan={3} className="px-4 py-2 text-sm font-medium text-gray-700 text-right">Total</td>
-                  <td className="px-4 py-2 text-sm font-bold text-gray-900">
-                    £{customers.reduce((sum, c) => sum + Number(c.price), 0).toFixed(2)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+          <RoundCustomerList roundId={id} customers={customers} />
         ) : (
           <p className="text-sm text-gray-400 italic">No customers assigned to this template yet.</p>
         )}

@@ -90,12 +90,27 @@ export default async function RoundsPage() {
                 <span>Every {round.frequency_weeks} weeks</span>
                 <span>{round.customers?.[0]?.count ?? 0} customers</span>
               </div>
-              {lastRunMap[round.id] && (
-                <div className="mt-2 text-xs text-gray-500">
-                  Last run: {new Date(lastRunMap[round.id]).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                </div>
-              )}
-              {!lastRunMap[round.id] && (
+              {lastRunMap[round.id] ? (() => {
+                const lastDate = new Date(lastRunMap[round.id]);
+                const dueDate = new Date(lastDate);
+                dueDate.setDate(dueDate.getDate() + round.frequency_weeks * 7);
+                const now = new Date();
+                now.setHours(0, 0, 0, 0);
+                const isOverdue = dueDate < now;
+                const isDueSoon = !isOverdue && dueDate <= new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+                return (
+                  <div className="mt-2 space-y-0.5">
+                    <p className="text-xs text-gray-500">
+                      Last run: {lastDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                    </p>
+                    <p className={`text-xs font-medium ${isOverdue ? "text-red-600" : isDueSoon ? "text-amber-600" : "text-gray-500"}`}>
+                      Due: {dueDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                      {isOverdue && " (overdue)"}
+                      {isDueSoon && " (due soon)"}
+                    </p>
+                  </div>
+                );
+              })() : (
                 <div className="mt-2 text-xs text-gray-400 italic">Never run</div>
               )}
               <div className="mt-3">

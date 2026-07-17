@@ -82,3 +82,26 @@ export async function deleteRound(id: string) {
   revalidatePath("/dashboard/rounds");
   redirect("/dashboard/rounds");
 }
+
+export async function reorderRoundCustomers(roundId: string, orderedCustomerIds: string[]) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (profile?.role !== "admin") return { error: "Admin only" };
+
+  for (let i = 0; i < orderedCustomerIds.length; i++) {
+    await supabase
+      .from("customers")
+      .update({ position_in_round: i + 1 })
+      .eq("id", orderedCustomerIds[i])
+      .eq("round_id", roundId);
+  }
+
+  revalidatePath(`/dashboard/rounds/${roundId}`);
+}

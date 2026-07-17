@@ -307,3 +307,50 @@ export async function addRoundToRun(runId: string, roundId: string) {
   revalidatePath(`/dashboard/runs/${runId}`);
   return { added: newCustomers.length };
 }
+
+export async function addExtraToCustomer(runId: string, customerId: string, description: string, price: number) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (profile?.role !== "admin") return { error: "Admin only" };
+
+  const { error } = await supabase.from("run_customer_extras").insert({
+    run_id: runId,
+    customer_id: customerId,
+    description,
+    price,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath(`/dashboard/runs/${runId}`);
+}
+
+export async function removeExtra(runId: string, extraId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (profile?.role !== "admin") return { error: "Admin only" };
+
+  const { error } = await supabase.from("run_customer_extras").delete().eq("id", extraId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath(`/dashboard/runs/${runId}`);
+}
