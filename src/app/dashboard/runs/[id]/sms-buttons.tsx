@@ -35,7 +35,7 @@ export function SmsButtons({ runId, runStatus, customers }: SmsButtonsProps) {
   const [sendingId, setSendingId] = useState<string | null>(null);
 
   function handleDayBefore() {
-    if (!confirm("Send 'windows being cleaned' texts to all customers on this run?")) return;
+    if (!confirm("Send 'coming tomorrow' texts to all customers on this run?")) return;
     startTransition(async () => {
       const res = await sendDayBeforeNotifications(runId);
       setResult(res);
@@ -64,7 +64,7 @@ export function SmsButtons({ runId, runStatus, customers }: SmsButtonsProps) {
             className="inline-flex items-center gap-2 text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-100 disabled:opacity-50"
           >
             <MessageSquare className="w-4 h-4" />
-            {pending ? "Sending..." : "Text: Coming Soon"}
+            {pending ? "Sending..." : "Text: Coming Tomorrow"}
             {dayBeforeSentCount > 0 && (
               <span className="inline-flex items-center gap-0.5 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">
                 <Check className="w-3 h-3" />{dayBeforeSentCount}
@@ -145,10 +145,10 @@ export function SmsButtons({ runId, runStatus, customers }: SmsButtonsProps) {
                         }}
                         disabled={pending || c.sms_day_before_sent}
                         className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded ${c.sms_day_before_sent ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500 hover:bg-blue-100 hover:text-blue-700 cursor-pointer"} disabled:cursor-default`}
-                        title={c.sms_day_before_sent ? "Already sent" : "Send 'coming soon' text"}
+                        title={c.sms_day_before_sent ? "Already sent" : "Send 'coming tomorrow' text"}
                       >
                         {sendingId === `${c.customer_id}-soon` ? "…" : c.sms_day_before_sent ? <Check className="w-3 h-3" /> : null}
-                        Soon
+                        Tomorrow
                       </button>
                       <button
                         onClick={() => {
