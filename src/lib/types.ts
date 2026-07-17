@@ -80,6 +80,37 @@ export interface SmsLog {
   created_at: string;
 }
 
+export type RunStatus = "planned" | "in_progress" | "completed";
+export type RunCustomerStatus = "pending" | "completed" | "skipped" | "cancelled";
+
+export interface Run {
+  id: string;
+  round_id: string | null;
+  name: string;
+  scheduled_date: string;
+  status: RunStatus;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RunCleaner {
+  id: string;
+  run_id: string;
+  cleaner_id: string;
+}
+
+export interface RunCustomer {
+  id: string;
+  run_id: string;
+  customer_id: string;
+  position: number;
+  price: number;
+  status: RunCustomerStatus;
+  notes: string | null;
+  completed_at: string | null;
+}
+
 // Extended types with relations
 export interface CustomerWithRound extends Customer {
   round: Round | null;
@@ -87,4 +118,10 @@ export interface CustomerWithRound extends Customer {
 
 export interface JobWithCustomer extends Job {
   customer: Customer;
+}
+
+export interface RunWithDetails extends Run {
+  round: Round | null;
+  run_cleaners: (RunCleaner & { profiles: Profile })[];
+  run_customers: (RunCustomer & { customers: Customer })[];
 }

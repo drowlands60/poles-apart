@@ -38,6 +38,9 @@ export default async function DashboardLayout({
                     <a href="/dashboard/rounds" className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">
                       Rounds
                     </a>
+                    <a href="/dashboard/runs" className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">
+                      Runs
+                    </a>
                     <a href="/dashboard/payments" className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">
                       Payments
                     </a>
@@ -76,6 +79,9 @@ export default async function DashboardLayout({
             </a>
             <a href="/dashboard/rounds" className="text-gray-600 hover:text-gray-900 px-3 py-1 text-sm font-medium whitespace-nowrap">
               Rounds
+            </a>
+            <a href="/dashboard/runs" className="text-gray-600 hover:text-gray-900 px-3 py-1 text-sm font-medium whitespace-nowrap">
+              Runs
             </a>
             <a href="/dashboard/payments" className="text-gray-600 hover:text-gray-900 px-3 py-1 text-sm font-medium whitespace-nowrap">
               Payments
