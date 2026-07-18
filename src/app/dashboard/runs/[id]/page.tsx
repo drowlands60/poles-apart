@@ -45,7 +45,7 @@ export default async function RunDetailPage({ params }: RunDetailPageProps) {
   const { data: allCleaners } = await supabase
     .from("profiles")
     .select("id, full_name")
-    .eq("role", "cleaner")
+    .in("role", ["admin", "cleaner"])
     .order("full_name");
 
   // All active customers not already in this run (for add dropdown)

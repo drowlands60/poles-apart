@@ -17,7 +17,7 @@ export default async function CleanersPage() {
   const { data: cleaners } = await supabase
     .from("profiles")
     .select("id, full_name, phone, role, created_at")
-    .eq("role", "cleaner")
+    .in("role", ["admin", "cleaner"])
     .order("full_name");
 
   return (

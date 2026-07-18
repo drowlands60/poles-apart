@@ -28,7 +28,7 @@ export default async function NewRunPage({ searchParams }: NewRunPageProps) {
   const { data: cleaners } = await supabase
     .from("profiles")
     .select("id, full_name")
-    .eq("role", "cleaner")
+    .in("role", ["admin", "cleaner"])
     .order("full_name");
 
   // If a round template is pre-selected, get its name for default
