@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { updateRun, deleteRun } from "../actions";
 import { AlertTriangle, Trash2 } from "lucide-react";
 import { RunDetailClient } from "./run-detail-client";
+import { RunMap } from "./run-map";
 import { SmsButtons } from "./sms-buttons";
 
 interface RunDetailPageProps {
@@ -37,7 +38,7 @@ export default async function RunDetailPage({ params }: RunDetailPageProps) {
 
   const { data: runCustomers } = await supabase
     .from("run_customers")
-    .select("*, customers(id, first_name, last_name, address_line1, postcode, phone)")
+    .select("*, customers(id, first_name, last_name, address_line1, postcode, phone, latitude, longitude)")
     .eq("run_id", id)
     .order("position", { ascending: true });
 
@@ -202,6 +203,25 @@ export default async function RunDetailPage({ params }: RunDetailPageProps) {
         extras={extras ?? []}
         updateAction={handleUpdate}
       />
+
+      {/* Map of customer locations */}
+      <div className="mt-6">
+        <RunMap
+          customers={(runCustomers ?? []).map((rc, i) => {
+            const c = rc.customers as unknown as { first_name: string; last_name: string; address_line1: string; postcode: string; latitude: number | null; longitude: number | null } | null;
+            return {
+              customer_id: rc.customer_id,
+              name: `${c?.first_name ?? ""} ${c?.last_name ?? ""}`.trim(),
+              address: c?.address_line1 ?? "",
+              postcode: c?.postcode ?? "",
+              position: i + 1,
+              latitude: c?.latitude ?? null,
+              longitude: c?.longitude ?? null,
+            };
+          })}
+          googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ""}
+        />
+      </div>
     </div>
   );
 }

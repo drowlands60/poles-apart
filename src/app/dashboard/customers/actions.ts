@@ -68,6 +68,8 @@ export async function updateCustomer(id: string, formData: FormData) {
       round_id: (formData.get("round_id") as string) || null,
       is_active: formData.get("is_active") === "on",
       sms_opt_in: formData.get("sms_opt_in") === "on",
+      latitude: null,
+      longitude: null,
     })
     .eq("id", id);
 

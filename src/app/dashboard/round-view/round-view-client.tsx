@@ -19,6 +19,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { RunMap } from "../runs/[id]/run-map";
 
 interface CustomerData {
   customer_id: string;
@@ -49,7 +50,7 @@ interface RoundViewClientProps {
   googleMapsApiKey: string;
 }
 
-export function RoundViewClient({ run, customers, extras }: RoundViewClientProps) {
+export function RoundViewClient({ run, customers, extras, googleMapsApiKey }: RoundViewClientProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState("");
   const [pending, startTransition] = useTransition();
@@ -226,7 +227,7 @@ export function RoundViewClient({ run, customers, extras }: RoundViewClientProps
           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-2">
             Up Next ({pendingCustomers.length} remaining)
           </h3>
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <DndContext id="round-view-dnd" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={pendingCustomers.map((c) => c.customer_id)} strategy={verticalListSortingStrategy}>
               <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
                 {pendingCustomers.map((c, idx) => (
@@ -349,6 +350,20 @@ export function RoundViewClient({ run, customers, extras }: RoundViewClientProps
           </div>
         </div>
       )}
+
+      {/* Map of customer locations */}
+      <RunMap
+        customers={customers.map((c, i) => ({
+          customer_id: c.customer_id,
+          name: `${c.customers?.first_name ?? ""} ${c.customers?.last_name ?? ""}`.trim(),
+          address: c.customers?.address_line1 ?? "",
+          postcode: c.customers?.postcode ?? "",
+          position: i + 1,
+          latitude: c.customers?.latitude ?? null,
+          longitude: c.customers?.longitude ?? null,
+        }))}
+        googleMapsApiKey={googleMapsApiKey}
+      />
     </div>
   );
 }
